@@ -47,9 +47,22 @@ ui <- page_sidebar(
       .bslib-sidebar-layout > .main {
         background: #edf7eb;
       }
+      .bslib-sidebar-layout {
+        --_sidebar-width: 270px;
+      }
       .card {
         border: 1px solid #d5e2d1;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .main .card {
+        margin-bottom: 0.75rem;
+      }
+      .card-header {
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+      }
+      .card-body {
+        padding: 0.9rem;
       }
       .chart-card {
         background: #f1f7e8;
@@ -66,19 +79,19 @@ ui <- page_sidebar(
       }
       .leaflet-hint {
         background: rgba(255, 255, 255, 0.92);
-        padding: 10px 14px;
+        padding: 8px 12px;
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
       }
       .chart-frame {
-        min-height: 380px;
+        min-height: 250px;
       }
       .chart-frame .html-widget,
       .chart-frame .plotly,
       .chart-frame .plot-container {
         height: 100% !important;
-        min-height: 340px;
+        min-height: 220px;
       }
     "))
   ),
@@ -121,7 +134,7 @@ ui <- page_sidebar(
     class = "section-card",
     full_screen = TRUE,
     card_header("Geographic distribution map"),
-    leafletOutput("obs_map", height = 420)
+    leafletOutput("obs_map", height = 300)
   ),
   card(
     class = "section-card",
