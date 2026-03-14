@@ -1,33 +1,14 @@
 # Japanese Beetle Tracker
 
-This repository contains my individual assignment app for DSCI 532. It re-implements the group project's beetle dashboard in Shiny for R, using GBIF occurrence data for `Popillia japonica`.
-
-The app supports the assignment requirements with:
-
-- input controls for `year range`, `country`, and `basis of record`
-- a reactive filtered dataset that updates from the selected inputs
-- multiple reactive outputs: value boxes, plots and an interactive map
+An R Shiny dashboard for tracking Japanese beetle observations across the world.
 
 ## App Purpose
 
 The dashboard helps users explore Japanese beetle observations across time and location. It allows filtering the dataset to answer questions such as:
 
 - how observation volume changes by year
-- which months have the most records
-- which countries and regions contribute observations
+- how observations are distributed geographically
 - how citizen-science versus other record types appear in the dataset
-
-## Project Structure
-
-```text
-Beetle-tracker-R/
-├── app.R
-├── data/raw/gbif-beetle.csv
-├── notebooks/eda_analysis.Rmd
-├── DESCRIPTION
-├── renv.lock
-└── README.md
-```
 
 ## Install Packages
 
