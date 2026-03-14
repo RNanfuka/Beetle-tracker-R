@@ -22,7 +22,6 @@ The dashboard helps users explore Japanese beetle observations across time and l
 ```text
 Beetle-tracker-R/
 ├── app.R
-├── src/app.R
 ├── data/raw/gbif-beetle.csv
 ├── notebooks/eda_analysis.Rmd
 ├── DESCRIPTION
@@ -42,7 +41,7 @@ renv::restore()
 Option 2: install the required packages directly.
 
 ```r
-install.packages(c("shiny", "bslib", "dplyr", "ggplot2", "leaflet", "scales"))
+install.packages(c("shiny", "bslib", "dplyr", "ggplot2", "leaflet", "plotly", "scales"))
 ```
 
 ## Run Locally
