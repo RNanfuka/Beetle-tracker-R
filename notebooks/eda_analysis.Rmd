@@ -1,0 +1,273 @@
+---
+title: "Exploratory Data Analysis for the Japanese Beetle Dashboard"
+author: "Rebecca Rosette Nanfuka"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+---
+
+# Introduction
+
+This report explores the GBIF occurrence dataset used in the Japanese Beetle Tracker project. The goal of the analysis is to confirm that the data can support the dashboard's core filters and outputs in the Shiny for R application.
+
+The EDA is centered on the following user story:
+
+> As a frequent iNaturalist user, I want to see the impacts of my, and my fellow citizen scientists, observations, so I can filter observations by basis of record.
+
+The key questions for this analysis are:
+
+1. Is the `basisOfRecord` field populated well enough to use as a dashboard filter?
+2. How are observations distributed across time and geography?
+3. Does the dataset contain enough information to support visual summaries and a map?
+
+# Setup
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(scales)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r load-data}
+beetles <- read_tsv("../data/raw/gbif-beetle.csv", show_col_types = FALSE) |>
+  mutate(
+    year = as.integer(year),
+    month = as.integer(month),
+    decimalLatitude = as.numeric(decimalLatitude),
+    decimalLongitude = as.numeric(decimalLongitude),
+    basisOfRecord = na_if(basisOfRecord, ""),
+    countryCode = na_if(countryCode, ""),
+    stateProvince = na_if(stateProvince, ""),
+    species = na_if(species, "")
+  )
+
+glimpse(beetles)
+dim(beetles)
+```
+
+# Dataset Overview
+
+The file contains GBIF occurrence records for Japanese beetle observations and related specimen records. It includes taxonomic information, geographic coordinates, dates, and record metadata used by the dashboard.
+
+## Relevant Columns
+
+| Header | Description | Data Type |
+|--------|-------------|-----------|
+| `gbifID` | Unique GBIF occurrence identifier | numeric |
+| `species` | Scientific species name | text |
+| `countryCode` | Two-letter country code | text |
+| `stateProvince` | State or province of the observation | text |
+| `eventDate` | Date the observation or record occurred | date/text |
+| `month` | Observation month | numeric |
+| `year` | Observation year | numeric |
+| `basisOfRecord` | Record type such as human observation or preserved specimen | text |
+| `decimalLatitude` | Latitude coordinate | numeric |
+| `decimalLongitude` | Longitude coordinate | numeric |
+| `recordedBy` | Observer or collector name | text |
+| `institutionCode` | Source institution code | text |
+
+## Initial Summary
+
+```{r initial-summary}
+summary(beetles[, c("species", "countryCode", "stateProvince", "basisOfRecord", "year", "month")])
+```
+
+# Data Quality Checks
+
+These checks focus on the fields used directly in the dashboard filters and outputs.
+
+```{r data-quality}
+quality_summary <- tibble(
+  field = c("basisOfRecord", "year", "countryCode", "decimalLatitude/decimalLongitude"),
+  missing_count = c(
+    sum(is.na(beetles$basisOfRecord)),
+    sum(is.na(beetles$year)),
+    sum(is.na(beetles$countryCode)),
+    sum(is.na(beetles$decimalLatitude) | is.na(beetles$decimalLongitude))
+  )
+) |>
+  mutate(missing_pct = percent(missing_count / nrow(beetles), accuracy = 0.1))
+
+quality_summary
+```
+
+```{r missingness-plot}
+missing_df <- colMeans(is.na(beetles)) |>
+  sort(decreasing = TRUE) |>
+  enframe(name = "column", value = "missing_prop") |>
+  filter(missing_prop > 0) |>
+  slice_head(n = 12)
+
+ggplot(missing_df, aes(x = reorder(column, missing_prop), y = missing_prop)) +
+  geom_col(fill = "#5b8e7d") +
+  coord_flip() +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Top Columns by Missingness",
+    x = "Column",
+    y = "Missing proportion"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+The important dashboard fields are generally usable. Missingness exists, especially for coordinates and some metadata columns, but there is still enough coverage for filtering and mapping.
+
+# Basis of Record Analysis
+
+This section directly addresses the assignment user story by examining whether `basisOfRecord` is populated and useful as a filter.
+
+```{r basis-counts}
+basis_summary <- beetles |>
+  filter(!is.na(basisOfRecord)) |>
+  count(basisOfRecord, sort = TRUE, name = "observations") |>
+  mutate(share = observations / sum(observations))
+
+basis_summary
+```
+
+```{r basis-plot}
+ggplot(basis_summary, aes(x = reorder(basisOfRecord, observations), y = observations)) +
+  geom_col(fill = "#1f5f3b") +
+  coord_flip() +
+  scale_y_continuous(labels = comma_format()) +
+  labs(
+    title = "Observation Counts by Basis of Record",
+    x = "Basis of record",
+    y = "Number of observations"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+The `basisOfRecord` field is well suited for a dashboard filter because it is populated for most records and separates human observations from other record sources such as preserved specimens.
+
+# Temporal Patterns
+
+The dashboard includes time-based outputs, so it is important to confirm the dataset supports yearly and seasonal summaries.
+
+```{r yearly-trend}
+yearly_counts <- beetles |>
+  filter(!is.na(year)) |>
+  count(year, name = "observations")
+
+ggplot(yearly_counts, aes(x = year, y = observations)) +
+  geom_line(color = "#1f5f3b", linewidth = 1) +
+  geom_point(color = "#1f5f3b", size = 1.8) +
+  scale_y_continuous(labels = comma_format()) +
+  labs(
+    title = "Observations Over Time",
+    x = "Year",
+    y = "Number of observations"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+```{r yearly-basis}
+year_basis <- beetles |>
+  filter(!is.na(year), !is.na(basisOfRecord)) |>
+  count(year, basisOfRecord, name = "observations") |>
+  group_by(basisOfRecord) |>
+  mutate(total_basis = sum(observations)) |>
+  ungroup() |>
+  slice_max(order_by = total_basis, n = 4, with_ties = FALSE)
+
+ggplot(year_basis, aes(x = year, y = observations, color = basisOfRecord)) +
+  geom_line(linewidth = 0.9) +
+  labs(
+    title = "Observation Trends by Basis of Record",
+    x = "Year",
+    y = "Number of observations",
+    color = "Basis of record"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+```{r month-plot}
+month_levels <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+monthly_counts <- beetles |>
+  filter(!is.na(month), month >= 1, month <= 12) |>
+  count(month, name = "observations") |>
+  mutate(month_label = factor(month_levels[month], levels = month_levels))
+
+ggplot(monthly_counts, aes(x = month_label, y = observations)) +
+  geom_col(fill = "#7fb069") +
+  scale_y_continuous(labels = comma_format()) +
+  labs(
+    title = "Seasonal Pattern of Observations",
+    x = "Month",
+    y = "Number of observations"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+The dataset supports both long-term and seasonal summaries, which aligns well with the app's time-series outputs.
+
+# Geographic Patterns
+
+The dashboard also depends on country, region, and coordinate data for spatial summaries.
+
+```{r top-countries}
+top_countries <- beetles |>
+  filter(!is.na(countryCode)) |>
+  count(countryCode, sort = TRUE, name = "observations") |>
+  slice_head(n = 10)
+
+top_countries
+```
+
+```{r top-regions}
+top_regions <- beetles |>
+  filter(!is.na(stateProvince)) |>
+  count(stateProvince, sort = TRUE, name = "observations") |>
+  slice_head(n = 10)
+
+top_regions
+```
+
+```{r map-data}
+map_data <- beetles |>
+  filter(
+    !is.na(decimalLatitude),
+    !is.na(decimalLongitude),
+    between(decimalLatitude, -90, 90),
+    between(decimalLongitude, -180, 180)
+  ) |>
+  slice_head(n = 2000)
+
+leaflet(map_data) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(
+    lng = ~decimalLongitude,
+    lat = ~decimalLatitude,
+    radius = 3,
+    stroke = FALSE,
+    fillOpacity = 0.5,
+    color = "#1f5f3b",
+    popup = ~paste0(
+      "<strong>Species:</strong> ", ifelse(is.na(species), "Unknown", species),
+      "<br><strong>Country:</strong> ", ifelse(is.na(countryCode), "Unknown", countryCode),
+      "<br><strong>Region:</strong> ", ifelse(is.na(stateProvince), "Unknown", stateProvince),
+      "<br><strong>Year:</strong> ", ifelse(is.na(year), "Unknown", year),
+      "<br><strong>Basis of record:</strong> ", ifelse(is.na(basisOfRecord), "Unknown", basisOfRecord)
+    )
+  )
+```
+
+The dataset contains enough valid coordinate information to support an interactive map, although some records do not include location coordinates and are excluded from this view.
+
+# Conclusion
+
+This EDA confirms that the GBIF dataset is appropriate for the Japanese Beetle Tracker dashboard in Shiny for R.
+
+The main findings are:
+
+1. `basisOfRecord` is populated well enough to serve as a meaningful dashboard filter.
+2. The dataset supports reactive summaries by year, month, country, and region.
+3. There are sufficient valid coordinates to power an interactive map.
+
+Overall, the data structure aligns with the app requirements and supports the core functionality implemented in the dashboard.

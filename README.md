@@ -1,79 +1,53 @@
-# Beetle-tracker-R
+# Japanese Beetle Tracker
 
-## Japanese Beetle Tracker
+This repository contains my individual assignment app for DSCI 532. It re-implements the group project's beetle dashboard in Shiny for R, using GBIF occurrence data for `Popillia japonica`.
 
-This repository contains my individual Shiny for R version of the Japanese Beetle dashboard. The app uses GBIF occurrence data to let users explore where beetle observations happened, how observation counts changed over time, and which locations contribute the most records.
+The app supports the assignment requirements with:
 
-The dashboard includes:
-
-- input controls for year range, country, and basis of record
-- a reactive filtered dataset shared across outputs
+- input controls for `year range`, `country`, and `basis of record`
+- a reactive filtered dataset that updates from the selected inputs
 - multiple reactive outputs: value boxes, plots, a table, and an interactive map
+
+## App Purpose
+
+The dashboard helps users explore Japanese beetle observations across time and location. It allows filtering the dataset to answer questions such as:
+
+- how observation volume changes by year
+- which months have the most records
+- which countries and regions contribute observations
+- how citizen-science versus other record types appear in the dataset
 
 ## Project Structure
 
-The repository is organized as follows:
-
-```
+```text
 Beetle-tracker-R/
-├── src/
-│   ├── app.R
-│   ├── www/  # Static assets (CSS, JS, etc.)
-├── data/
-│   ├── raw/  # Raw data files
-│       ├── gbif-beetle.csv
-├── img/      # Images for the project
-├── notebooks/ # EDA and analysis notebooks
-├── reports/  # Reports and documentation
+├── app.R
+├── src/app.R
+├── data/raw/gbif-beetle.csv
+├── notebooks/eda_analysis.Rmd
 ├── DESCRIPTION
-├── LICENSE
-├── README.md
+├── renv.lock
+└── README.md
 ```
 
-### Instructions
+## Install Packages
 
-1. **Set up the R environment**:
-   ```R
-   install.packages("renv")
-   renv::init()
-   renv::restore()
-   ```
+Option 1: use `renv` to restore the project environment.
 
-2. **Run the Shiny App**:
-   ```R
-   shiny::runApp("src/app.R")
-   ```
+```r
+install.packages("renv")
+renv::restore()
+```
 
-3. **Contributing**:
-   - Follow the project structure.
-   - Commit changes with meaningful messages.
-   - Push changes to the repository.
-
-4. **Data**:
-   - Place raw data files in the `data/raw/` folder.
-   - Processed data can be stored in `data/processed/` (if needed).
-
-5. **Reports**:
-   - Add reports and documentation in the `reports/` folder.
-
-6. **Notebooks**:
-   - Add EDA and analysis notebooks in the `notebooks/` folder.
-
-## Running the App Locally
-
-### Install packages
-
-Open R and install the required packages:
+Option 2: install the required packages directly.
 
 ```r
 install.packages(c("shiny", "bslib", "dplyr", "ggplot2", "leaflet", "scales"))
 ```
 
-The repository also includes a `DESCRIPTION` file so Posit Connect Cloud can detect dependencies during deployment.
+## Run Locally
 
-### Run the app
-
-From the repository root, start the app with:
+From the repository root in R:
 
 ```r
 shiny::runApp()
@@ -85,16 +59,22 @@ Or from the terminal:
 R -e "shiny::runApp()"
 ```
 
-## Repository Structure
-
-- `app.R`: main Shiny for R application
-- `DESCRIPTION`: dependency manifest for Posit Connect Cloud
-- `data/raw/gbif-beetle.csv`: occurrence data used by the app
-
 ## Deployment
 
-Deploy this repository to your own Posit Connect Cloud account. After deployment:
+Deploy this repository to your own Posit Connect Cloud account. The repository includes:
 
-1. Copy the stable deployed URL.
-2. Add that URL to the GitHub repository About section.
-3. Make sure the repository stays public for grading.
+- `app.R` as the root app entry point
+- `DESCRIPTION` for dependency detection
+- `renv.lock` for package restoration
+
+After deployment:
+
+1. Copy the deployed app URL.
+2. Add the URL to the GitHub repository About section.
+3. Keep the repository public for grading.
+
+## Deployed App
+
+Add your Posit Connect Cloud link here after deployment:
+
+`<paste deployed app URL here>`

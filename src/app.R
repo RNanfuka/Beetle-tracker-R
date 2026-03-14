@@ -4,7 +4,16 @@ library(dplyr)
 library(ggplot2)
 library(leaflet)
 
-data_path <- file.path("data", "raw", "gbif-beetle.csv")
+data_candidates <- c(
+  file.path("data", "raw", "gbif-beetle.csv"),
+  file.path("..", "data", "raw", "gbif-beetle.csv")
+)
+data_path <- data_candidates[file.exists(data_candidates)][1]
+
+if (is.na(data_path)) {
+  stop("Could not find data/raw/gbif-beetle.csv.")
+}
+
 beetles <- read.delim(data_path, sep = "\t", stringsAsFactors = FALSE)
 
 beetles$year <- suppressWarnings(as.integer(beetles$year))
@@ -221,4 +230,5 @@ server <- function(input, output, session) {
   })
 }
 
-shinyApp(ui = ui, server = server)
+app <- shinyApp(ui = ui, server = server)
+app
