@@ -6,7 +6,7 @@ The app supports the assignment requirements with:
 
 - input controls for `year range`, `country`, and `basis of record`
 - a reactive filtered dataset that updates from the selected inputs
-- multiple reactive outputs: value boxes, plots, a table, and an interactive map
+- multiple reactive outputs: value boxes, plots and an interactive map
 
 ## App Purpose
 
@@ -64,7 +64,6 @@ This app is deployed on Posit Connect Cloud.
 
 - `app.R` as the app entry point
 - `manifest.json` for Posit Connect Cloud deployment
-- `app.R` as the root app entry point
 - `DESCRIPTION` for dependency detection
 - `renv.lock` for local package restoration
 
