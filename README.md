@@ -60,18 +60,14 @@ R -e "shiny::runApp()"
 
 ## Deployment
 
-Deploy this repository to your own Posit Connect Cloud account. The repository includes:
+This app is deployed on Posit Connect Cloud.
 
+- `app.R` as the app entry point
+- `manifest.json` for Posit Connect Cloud deployment
 - `app.R` as the root app entry point
 - `DESCRIPTION` for dependency detection
-- `renv.lock` for package restoration
-
-After deployment:
-
-1. Copy the deployed app URL.
-2. Add the URL to the GitHub repository About section.
-3. Keep the repository public for grading.
+- `renv.lock` for local package restoration
 
 ## Deployed App
 
-https://connect.posit.cloud/rnanfuka/content/019ceb45-947d-b345-2aaf-b2d623ebec62
+[Open the deployed app](https://connect.posit.cloud/rnanfuka/content/019ceb45-947d-b345-2aaf-b2d623ebec62)
