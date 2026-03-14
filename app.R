@@ -39,6 +39,40 @@ ui <- page_sidebar(
     primary = "#1f5f3b",
     secondary = "#d7ead8"
   ),
+  tags$head(
+    tags$style(HTML("
+      body {
+        background: #edf7eb;
+      }
+      .bslib-sidebar-layout > .main {
+        background: #edf7eb;
+      }
+      .card {
+        border: 1px solid #d5e2d1;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .chart-card {
+        background: #f1f7e8;
+      }
+      .chart-card > .card-header {
+        background: #9fcd9f;
+        color: #215c2d;
+        font-weight: 600;
+      }
+      .section-card > .card-header {
+        background: #edf7eb;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+      .leaflet-hint {
+        background: rgba(255, 255, 255, 0.92);
+        padding: 10px 14px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+        font-size: 0.95rem;
+      }
+    "))
+  ),
   sidebar = sidebar(
     sliderInput(
       "year_range",
@@ -75,35 +109,30 @@ ui <- page_sidebar(
     col_widths = c(4, 4, 4)
   ),
   card(
+    class = "section-card",
     full_screen = TRUE,
     card_header("Geographic distribution map"),
     leafletOutput("obs_map", height = 420)
   ),
-  layout_columns(
-    card(
-      full_screen = TRUE,
-      card_header("Occurrences over time"),
-      plotlyOutput("year_plot", height = 320)
-    ),
-    card(
-      full_screen = TRUE,
-      card_header("Basis of record"),
-      plotlyOutput("basis_plot", height = 320)
-    ),
-    col_widths = c(6, 6)
-  ),
-  layout_columns(
-    card(
-      full_screen = TRUE,
-      card_header("Top rights holders"),
-      plotlyOutput("rights_plot", height = 320)
-    ),
-    card(
-      full_screen = TRUE,
-      card_header("Seasonal observations"),
-      plotlyOutput("month_plot", height = 320)
-    ),
-    col_widths = c(6, 6)
+  card(
+    class = "section-card",
+    full_screen = TRUE,
+    card_header("Observation charts"),
+    layout_columns(
+      card(
+        class = "chart-card",
+        full_screen = TRUE,
+        card_header("Occurrences over time"),
+        plotlyOutput("year_plot", height = 320)
+      ),
+      card(
+        class = "chart-card",
+        full_screen = TRUE,
+        card_header("Basis of record"),
+        plotlyOutput("basis_plot", height = 320)
+      ),
+      col_widths = c(6, 6)
+    )
   )
 )
 
@@ -195,17 +224,28 @@ server <- function(input, output, session) {
         )
       )
     ) +
-      geom_line(color = "#1f5f3b", linewidth = 1) +
-      geom_point(color = "#1f5f3b", size = 2) +
+      geom_line(color = "#4f79a8", linewidth = 1.1) +
       scale_x_continuous(breaks = scales::pretty_breaks()) +
+      scale_y_continuous(labels = scales::comma) +
       labs(
         x = "Year",
         y = "Observations"
       ) +
-      theme_minimal(base_size = 12)
+      theme_minimal(base_size = 12) +
+      theme(
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "#f8faf6", color = NA),
+        plot.background = element_rect(fill = "#f8faf6", color = NA)
+      )
 
     ggplotly(p, tooltip = "text") |>
-      layout(hoverlabel = list(align = "left"), showlegend = FALSE)
+      layout(
+        hoverlabel = list(align = "left"),
+        showlegend = FALSE,
+        paper_bgcolor = "#f1f7e8",
+        plot_bgcolor = "#f8faf6"
+      ) |>
+      config(displayModeBar = FALSE)
   })
 
   output$basis_plot <- renderPlotly({
@@ -220,8 +260,9 @@ server <- function(input, output, session) {
       labels = ~basisOfRecord,
       values = ~observations,
       type = "pie",
-      hole = 0.45,
-      textinfo = "label+percent",
+      sort = FALSE,
+      marker = list(colors = c("#4f79a8", "#f28e2b", "#d45b52", "#6db3af")),
+      textinfo = "none",
       hovertemplate = paste(
         "%{label}",
         "<br>Observations: %{value:,}",
@@ -229,68 +270,19 @@ server <- function(input, output, session) {
         "<extra></extra>"
       )
     ) |>
-      layout(showlegend = TRUE)
-  })
-
-  output$rights_plot <- renderPlotly({
-    rights_counts <- filtered_data() |>
-      filter(!is.na(rightsHolder), nzchar(rightsHolder)) |>
-      count(rightsHolder, sort = TRUE, name = "observations") |>
-      slice_head(n = 10)
-
-    validate(need(nrow(rights_counts) > 0, "No rights holder data is available."))
-
-    plot_ly(
-      rights_counts,
-      x = ~observations,
-      y = ~reorder(rightsHolder, observations),
-      type = "bar",
-      orientation = "h",
-      marker = list(color = "#4f79a8"),
-      hovertemplate = paste(
-        "Rights holder: %{y}",
-        "<br>Observations: %{x:,}",
-        "<extra></extra>"
-      )
-    ) |>
       layout(
-        xaxis = list(title = "Observations"),
-        yaxis = list(title = ""),
-        margin = list(l = 180)
-      )
-  })
-
-  output$month_plot <- renderPlotly({
-    monthly_counts <- filtered_data() |>
-      filter(!is.na(month), month >= 1, month <= 12) |>
-      count(month, name = "observations") |>
-      mutate(month_label = factor(month_levels[month], levels = month_levels))
-
-    validate(need(nrow(monthly_counts) > 0, "No monthly observation data is available."))
-
-    p <- ggplot(
-      monthly_counts,
-      aes(
-        x = month_label,
-        y = observations,
-        text = paste0(
-          "Month: ", month_label,
-          "<br>Observations: ", format(observations, big.mark = ",")
-        )
-      )
-    ) +
-      geom_col(fill = "#7fb069") +
-      labs(
-        x = "Month",
-        y = "Observations"
-      ) +
-      theme_minimal(base_size = 12)
-
-    ggplotly(p, tooltip = "text") |>
-      layout(hoverlabel = list(align = "left"), showlegend = FALSE)
+        showlegend = TRUE,
+        paper_bgcolor = "#f1f7e8",
+        plot_bgcolor = "#f8faf6"
+      ) |>
+      config(displayModeBar = FALSE)
   })
 
   output$obs_map <- renderLeaflet({
+    if (!requireNamespace("leaflet.extras2", quietly = TRUE)) {
+      stop("Package 'leaflet.extras2' is required for the hexbin map. Install it with install.packages('leaflet.extras2', repos = 'https://cloud.r-project.org').")
+    }
+
     map_data <- filtered_data() |>
       filter(
         !is.na(decimalLatitude),
@@ -309,20 +301,19 @@ server <- function(input, output, session) {
 
     leaflet(map_data) |>
       addProviderTiles(providers[[input$map_underlay]]) |>
-      addCircleMarkers(
+      addControl(
+        html = "<div class='leaflet-hint'>Hover over a cell</div>",
+        position = "topright"
+      ) |>
+      leaflet.extras2::addHexbin(
         lng = ~decimalLongitude,
         lat = ~decimalLatitude,
-        radius = 4,
-        stroke = FALSE,
-        fillOpacity = 0.55,
-        color = "#1f5f3b",
-        popup = ~paste0(
-          "<strong>Country:</strong> ", ifelse(is.na(countryCode), "Unknown", countryCode),
-          "<br><strong>Region:</strong> ", ifelse(is.na(stateProvince), "Unknown", stateProvince),
-          "<br><strong>Year:</strong> ", ifelse(is.na(year), "Unknown", year),
-          "<br><strong>Basis of record:</strong> ", ifelse(is.na(basisOfRecord), "Unknown", basisOfRecord)
-        ),
-        clusterOptions = markerClusterOptions()
+        radius = 12,
+        opacity = 0.6,
+        options = leaflet.extras2::hexbinOptions(
+          colorRange = c("#2b0a8f", "#7a1fa2", "#c03a7a", "#f18f3b", "#f0f921"),
+          tooltip = "Observations: "
+        )
       )
   })
 }

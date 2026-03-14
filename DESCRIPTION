@@ -9,6 +9,7 @@ Imports:
     dplyr,
     ggplot2,
     leaflet,
+    leaflet.extras2,
     plotly,
     scales
 Encoding: UTF-8

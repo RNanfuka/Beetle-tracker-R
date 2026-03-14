@@ -41,7 +41,7 @@ renv::restore()
 Option 2: install the required packages directly.
 
 ```r
-install.packages(c("shiny", "bslib", "dplyr", "ggplot2", "leaflet", "plotly", "scales"))
+install.packages(c("shiny", "bslib", "dplyr", "ggplot2", "leaflet", "leaflet.extras2", "plotly", "scales"))
 ```
 
 ## Run Locally
