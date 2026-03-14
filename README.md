@@ -69,4 +69,4 @@ This app is deployed on Posit Connect Cloud.
 
 ## Deployed App
 
-[Open the deployed app](https://connect.posit.cloud/rnanfuka/content/019ceb45-947d-b345-2aaf-b2d623ebec62)
+[Open the deployed app](https://019ceb45-947d-b345-2aaf-b2d623ebec62.share.connect.posit.cloud/)
