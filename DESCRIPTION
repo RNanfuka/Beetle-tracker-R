@@ -1,0 +1,14 @@
+Package: beetletracker
+Title: Japanese Beetle Tracker in Shiny for R
+Version: 0.1.0
+Description: An R Shiny dashboard for exploring Japanese Beetle occurrence records from GBIF.
+Authors@R: person("Rebecca", "Rosette Nanfuka", role = c("aut", "cre"), email = "rebecca@example.com")
+Imports:
+    shiny,
+    bslib,
+    dplyr,
+    ggplot2,
+    leaflet,
+    scales
+Encoding: UTF-8
+LazyData: true
