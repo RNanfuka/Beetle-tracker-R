@@ -74,6 +74,4 @@ After deployment:
 
 ## Deployed App
 
-Add your Posit Connect Cloud link here after deployment:
-
-`<paste deployed app URL here>`
+https://connect.posit.cloud/rnanfuka/content/019ceb45-947d-b345-2aaf-b2d623ebec62
