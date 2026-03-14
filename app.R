@@ -71,6 +71,15 @@ ui <- page_sidebar(
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
         font-size: 0.95rem;
       }
+      .chart-frame {
+        min-height: 380px;
+      }
+      .chart-frame .html-widget,
+      .chart-frame .plotly,
+      .chart-frame .plot-container {
+        height: 100% !important;
+        min-height: 340px;
+      }
     "))
   ),
   sidebar = sidebar(
@@ -123,13 +132,21 @@ ui <- page_sidebar(
         class = "chart-card",
         full_screen = TRUE,
         card_header("Occurrences over time"),
-        plotlyOutput("year_plot", height = 320)
+        card_body(
+          class = "chart-frame",
+          fill = TRUE,
+          plotlyOutput("year_plot", height = "100%")
+        )
       ),
       card(
         class = "chart-card",
         full_screen = TRUE,
         card_header("Basis of record"),
-        plotlyOutput("basis_plot", height = 320)
+        card_body(
+          class = "chart-frame",
+          fill = TRUE,
+          plotlyOutput("basis_plot", height = "100%")
+        )
       ),
       col_widths = c(6, 6)
     )
